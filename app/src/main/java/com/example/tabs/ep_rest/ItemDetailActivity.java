@@ -1,14 +1,19 @@
 package com.example.tabs.ep_rest;
 
+import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tabs.ep_rest.api.resource.MyAppService;
 import com.example.tabs.ep_rest.model.Item;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -22,23 +27,25 @@ import retrofit2.Response;
  */
 
 public class ItemDetailActivity extends AppCompatActivity implements Callback<Item> {
-
+    private Context context;
     private Item item;
     private TextView tvDescription;
     private TextView tvTitle;
     private TextView tvPrice;
+    private ImageView imageView;
+    private CollapsingToolbarLayout toolbarLayout;
     private MyAppService myAppService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
+        context = getApplicationContext();
+        toolbarLayout = findViewById(R.id.toolbar_layout);
+        tvDescription = findViewById(R.id.tv_description);
+        tvTitle = findViewById(R.id.tv_title);
+        imageView = findViewById(R.id.imgView);
         myAppService = ApiUtils.getMyAppService();
-        tvDescription = (TextView) findViewById(R.id.tv_description);
-        tvTitle = (TextView) findViewById(R.id.tv_title);
-        tvPrice = findViewById(R.id.tv_price);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         final int id = getIntent().getIntExtra("item.id", 0);
         if (id > 0) {
             myAppService.get(id).enqueue(this);
@@ -52,9 +59,17 @@ public class ItemDetailActivity extends AppCompatActivity implements Callback<It
         Log.i("ItemDetailActivity", "Result item description: " + item.getDescription());
         Log.i("ItemDetailActivity", "Result item price:  " + item.getPrice());
         if (response.isSuccessful()) {
+            final String IMG_URL = "http://10.0.2.2/storage/" + item.getImg();
+            Picasso
+                    .with(context)
+                    .load(IMG_URL)
+                    .fit()
+                    .centerInside()
+                    .into(imageView);
+
             tvDescription.setText(item.getDescription());
+            //toolbarLayout.setTitle(item.getTitle());
             tvTitle.setText(item.getTitle());
-            tvPrice.setText(String.format(Locale.ENGLISH, "%.2f EUR", item.getPrice()));
         } else {
             String errorMessage;
             try {
